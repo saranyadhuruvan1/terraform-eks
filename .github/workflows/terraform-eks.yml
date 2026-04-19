@@ -1,0 +1,55 @@
+name: Terraform EKS Cluster
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: "Terraform Apply for EKS"
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: ./env/dev
+        run: terraform init \
+          -backend-config="bucket=${{ secrets.TF_BUCKET }}" \
+          -backend-config="key=eks/terraform.tfstate" \
+          -backend-config="region=${{ secrets.AWS_REGION }}" \
+          -backend-config="dynamodb_table=${{ secrets.TF_DYNAMODB_TABLE }}"
+
+      - name: Terraform Validate
+        working-directory: ./env/dev
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ./env/dev
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: ./env/dev
+        run: terraform apply -auto-approve tfplan
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ secrets.AWS_REGION }} \
+            --name my-eks-cluster
