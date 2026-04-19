@@ -29,6 +29,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
+        working-directory: .
         run: |
           terraform init \
             -backend-config="bucket=${{ secrets.TF_BUCKET }}" \
@@ -37,15 +38,19 @@ jobs:
             -backend-config="dynamodb_table=${{ secrets.TF_DYNAMODB_TABLE }}"
 
       - name: Terraform Validate
+        working-directory: .
         run: terraform validate
 
       - name: Terraform Plan
+        working-directory: .
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
+        working-directory: .
         run: terraform apply -auto-approve tfplan
 
       - name: Update kubeconfig
+        working-directory: .
         run: |
           aws eks update-kubeconfig \
             --region ${{ secrets.AWS_REGION }} \
