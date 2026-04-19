@@ -33,4 +33,28 @@ jobs:
         run: |
           rm -rf .terraform
           rm -rf .terraform.d
-          rm -rf terraform.tfstate
+          rm -rf terraform.tfstate.d
+          rm -f .terraform.lock.hcl
+          rm -f terraform.tfstate
+          rm -f terraform.tfstate.backup
+
+      - name: Terraform Init
+        working-directory: .
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_BUCKET }}" \
+            -backend-config="key=eks/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.TF_DYNAMODB_TABLE }}"
+
+      - name: Terraform Validate
+        working-directory: .
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: .
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: .
+        run: terraform apply -auto-approve tfplan
