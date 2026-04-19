@@ -33,6 +33,7 @@ jobs:
         run: |
           rm -rf .terraform
           rm -rf .terraform.d
+          rm -rf ~/.terraform.d
           rm -rf terraform.tfstate.d
           rm -f .terraform.lock.hcl
           rm -f terraform.tfstate
