@@ -29,23 +29,20 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        
-        run: terraform init \
-          -backend-config="bucket=${{ secrets.TF_BUCKET }}" \
-          -backend-config="key=eks/terraform.tfstate" \
-          -backend-config="region=${{ secrets.AWS_REGION }}" \
-          -backend-config="dynamodb_table=${{ secrets.TF_DYNAMODB_TABLE }}"
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_BUCKET }}" \
+            -backend-config="key=eks/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.TF_DYNAMODB_TABLE }}"
 
       - name: Terraform Validate
-        working-directory: ./env/dev
         run: terraform validate
 
       - name: Terraform Plan
-        working-directory: ./env/dev
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
-        working-directory: ./env/dev
         run: terraform apply -auto-approve tfplan
 
       - name: Update kubeconfig
